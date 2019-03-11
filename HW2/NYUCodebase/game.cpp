@@ -88,6 +88,7 @@ struct Ball:GameObject{
         verticleVelocity = 1.0f;
     }
 
+    /* seedX and seedY are for the direction of the movement  */
     int seedX;
     int seedY;
 };
@@ -129,11 +130,14 @@ void Update(Ball& ball, GameObject& leftPaddle, GameObject& rightPaddle, ShaderP
     lastFrameTicks = ticks;
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
     
+    
+    /* when the ball touches the wall */
     if(ball.coord.y > 1.5f - ball.height/2 || ball.coord.y < -1.5f + ball.height/2){
         ball.coord.y = (ball.coord.y > 1.5f - ball.height/2) ? 1.5f - ball.height/2 - 0.005f : -1.5f + ball.height/2 + 0.0005f;
         ball.verticleVelocity *= -1.0f;
     }
-
+    
+    /* if the paddle touches the wall, stop moving */
     if(keys[SDL_SCANCODE_UP]){
         rightPaddle.coord.y += rightPaddle.verticleVelocity * elapsed;
         if(rightPaddle.coord.y >= 1.5f - rightPaddle.height/2){
@@ -158,15 +162,18 @@ void Update(Ball& ball, GameObject& leftPaddle, GameObject& rightPaddle, ShaderP
             leftPaddle.coord.y = -1.5 + leftPaddle.height/2;
         }
     }
+    
     /* How far is the ball with the paddle on X/Y axis? */
     auto lpx = abs(ball.coord.x - leftPaddle.coord.x) - (ball.width + leftPaddle.width)/2;
     auto lpy = abs(ball.coord.y - leftPaddle.coord.y) - (ball.height + leftPaddle.height)/2;
     auto rpx = abs(ball.coord.x - rightPaddle.coord.x) - (ball.width + rightPaddle.width)/2;
     auto rpy = abs(ball.coord.y - rightPaddle.coord.y) - (ball.height + rightPaddle.height)/2;
     
-    
-    
-    
+    /*
+        reverse is a bool to keep track if the ball is not colliding with the paddle or not
+        if we already reverse the horizontal velocity or vertical velocity, we may not want to reverse the
+        velocity again right at the next frame because the ball might not leave the paddle yet.
+     */
     if(reverse){
         if ((lpx < 0 && lpy < 0) || (rpx < 0 && rpy < 0)){
             auto ballTopY = ball.coord.y - ball.height/2;
@@ -205,6 +212,7 @@ void Update(Ball& ball, GameObject& leftPaddle, GameObject& rightPaddle, ShaderP
     ball.coord.y += sin(ball.seedY * M_PI/180)* elapsed * ball.verticleVelocity;
     
     
+    /* detect winner and reset left/right paddles and balls */
     if(ball.coord.x < -2.0 + ball.width/2){
         std::cout << "Right paddle wins" << std::endl;
         leftPaddle = GameObject(0.01f,0.6f,-1.6f,0.0f,0.0f,1.0f);
@@ -236,29 +244,26 @@ int main()
     glewInit();
 #endif
     
-    //setup
+    /* setup */
     ShaderProgram untexturedProgram = setUpProgram();
-    
     SDL_Event event;
     float lastFrameTicks = 0.0f;
     bool done = false;
     
-//    width,height,coord,horizontalVelocity,verticleVelocity,
+    /* width,height,coord,horizontalVelocity,verticleVelocity */
     GameObject leftPaddle(0.01f,0.6f,-1.6f,0.0f,0.0f,1.0f);
     GameObject rightPaddle(0.01f,0.6f,1.6f,0.0f,0.0f,1.0f);
     Ball ball(0.025f,0.025f,0.0f,0.0f,1.3f,1.3f);
     bool reverse = true;
     
     while (!done) {
-
-        
-//      Here starts the drawing
+        /* Here starts the drawing */
         
         ProcessEvents(done,event);
         Update(ball,leftPaddle,rightPaddle,untexturedProgram,lastFrameTicks,reverse);
         Render();
         
-//      Here ends the drawing
+        /* Here ends the drawing */
         
     }
     
