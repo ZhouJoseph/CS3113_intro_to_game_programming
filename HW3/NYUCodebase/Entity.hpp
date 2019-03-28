@@ -16,15 +16,17 @@
 #include <vector>
 
 struct Entity{
+    Entity(){};
     Entity(float x, float y, float width, float height);
     virtual void Draw(ShaderProgram& program) const;
     glm::vec3 position;
     glm::vec3 velocity;
     glm::vec3 size;
-    float health;
+    int health;
 };
 
 struct EntityTextured:Entity{
+    EntityTextured(){};
     EntityTextured(float x, float y, float width, float height, const SheetSprite& sprite);
     virtual void Draw(ShaderProgram &program) const;
     void shootBullet(std::vector<EntityTextured>& bulletVector, const SheetSprite& bullet, float verticalVelocity);

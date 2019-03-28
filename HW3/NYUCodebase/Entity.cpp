@@ -24,7 +24,6 @@ void Entity::Draw(ShaderProgram& program) const {
     glDisableVertexAttribArray(program.positionAttribute);
 }
 
-
 EntityTextured::EntityTextured(float x, float y, float width, float height, const SheetSprite& sprite):
 Entity(x,y,width,height),sprite(sprite){}
 void EntityTextured::Draw(ShaderProgram &program) const {
