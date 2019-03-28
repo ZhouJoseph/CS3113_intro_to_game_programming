@@ -13,6 +13,29 @@ bool shouldRemoveBullet(Entity bullet);
 
 
 struct GameState{
+    /* fields */
+    ShaderProgram program;
+    GameMode gameMode;
+    SDL_Event event;
+    EntityTextured player;
+    EntityFont mainMenu;
+    EntityFont title;
+    EntityFont scoreFont;
+    EntityFont healthFont;
+    SheetSprite ufoSprite;
+    SheetSprite enemyBullet;
+    SheetSprite playerBullet;
+    SheetSprite playerSprite;
+    std::vector<EntityTextured> enemyBullets;
+    std::vector<EntityTextured> playerBullets;
+    std::vector<EntityTextured> enemies;
+    float lastFrameTicks;
+    int lastBulletTick;
+    int score;
+    int basicPoint;
+    bool shootAble;
+    bool done;
+    bool bonus;
     
     GameState():
     mainMenu(-1.0f, -0.1f, 0.3f, 0.3f, "(Press S to start...)"),
@@ -26,9 +49,11 @@ struct GameState{
     gameMode(STATE_MAIN_MENU),
     lastFrameTicks(0.0f),
     lastBulletTick(0),
-    shootAble(true),
     score(0),
-    done(false)
+    basicPoint(10),
+    shootAble(true),
+    done(false),
+    bonus(false)
     {
         player = EntityTextured(0, -1.2f, 1.0f, 1.0f, playerSprite);
         player.health = 3;
@@ -66,14 +91,14 @@ struct GameState{
     }
     
     void renderGameOver(){
-        EntityFont finalScore(-1.1f, -0.5f, 0.3f, 0.3f, scoreFont.text);
+        EntityFont finalScore(-1.1f, -0.3f, 0.3f, 0.3f, "Score: " + std::to_string(score));
         finalScore.Draw(program, LoadTexture(RESOURCE_FOLDER"pixel_font.png"), 0.01f);
         std::string displayText = (enemies.size() == 0) ? "WIN!" : "LOSE";
-        EntityFont result(-0.9f, 0.0f, 0.8f, 0.8f, displayText);
+        EntityFont result(-0.9f, 0.2f, 0.8f, 0.8f, displayText);
         result.Draw(program, LoadTexture(RESOURCE_FOLDER"pixel_font.png"), 0.01f);
         EntityFont restart = mainMenu;
         restart.position.x = -1.1f;
-        restart.position.y = -0.8f;
+        restart.position.y = -0.5f;
         restart.Draw(program, LoadTexture(RESOURCE_FOLDER"pixel_font.png"), 0.01f);
     }
     
@@ -132,7 +157,7 @@ struct GameState{
                     ufo.position.x -= 0.01f;
                 else
                     ufo.position.x += 0.01f;
-                ufo.velocity.x *= -1;
+                ufo.velocity.x *= -1.08;
                 ufo.position.y -= 0.1f;
             }
             maxXPosition = -1.7f;
@@ -141,10 +166,10 @@ struct GameState{
         
         /* Draw the enemies */
         for(auto& ufo : enemies){
-            //                    ufo.Draw(textured);
             ufo.position.x += ufo.velocity.x * elapsed;
         }
         
+        /* hit an enemy? */
         for(auto& bullet : playerBullets){
             for(int j = 0; j < enemies.size(); j++){
                 auto target = enemies[j];
@@ -152,7 +177,13 @@ struct GameState{
                 float distanceY = abs(bullet.position.y - target.position.y) - (bullet.size.y * bullet.sprite.size + target.size.y * target.sprite.size)/2;
                 if(distanceX < -0.08f && distanceY < -0.05f){
                     playerBullets.pop_back();
-                    score += 10;
+                    
+                    score += basicPoint;
+                    if(bonus && basicPoint < 100){
+                        basicPoint += 10;
+                    }
+                    if(!bonus){ bonus = true; }
+                    
                     enemies.erase(enemies.begin() + j);
                     break;
                 }
@@ -187,7 +218,12 @@ struct GameState{
         }
         if(enemies.size() == 0){ gameMode = STATE_GAME_OVER; }
         enemyBullets.erase(std::remove_if(enemyBullets.begin(), enemyBullets.end(), shouldRemoveBullet), enemyBullets.end());
+        int cancelBonus = playerBullets.size();
         playerBullets.erase(std::remove_if(playerBullets.begin(), playerBullets.end(), shouldRemoveBullet), playerBullets.end());
+        if(cancelBonus != playerBullets.size()){
+            bonus = false;
+            basicPoint = 10;
+        }
     }
     
     void update(){
@@ -244,6 +280,8 @@ struct GameState{
         lastBulletTick = 0;
         shootAble = true;
         score = 0;
+        basicPoint = 10;
+        bonus = false;
         player = EntityTextured(0, -1.2f, 1.0f, 1.0f, playerSprite);
         player.health = 3;
         player.velocity.x = 0.6f;
@@ -284,26 +322,6 @@ struct GameState{
                 break;
         }
     }
-    ShaderProgram program;
-    GameMode gameMode;
-    SDL_Event event;
-    EntityTextured player;
-    EntityFont mainMenu;
-    EntityFont title;
-    EntityFont scoreFont;
-    EntityFont healthFont;
-    SheetSprite ufoSprite;
-    SheetSprite enemyBullet;
-    SheetSprite playerBullet;
-    SheetSprite playerSprite;
-    std::vector<EntityTextured> enemyBullets;
-    std::vector<EntityTextured> playerBullets;
-    std::vector<EntityTextured> enemies;
-    float lastFrameTicks;
-    int lastBulletTick;
-    int score;
-    bool shootAble;
-    bool done;
 };
 
 
