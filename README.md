@@ -5,4 +5,4 @@ Intro to Game Programming
 - [Pong](HW2-Pong)
 - [Space Invader](HW3-Space-Invader)
 - [Platformer](HW4-Platformer)
-- [Final Project: 3-level Platformer with fancy game AI](Fianl)
+- [Final Project: 3-level Platformer with fancy game AI](Final)
